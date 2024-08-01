@@ -9,17 +9,25 @@ from utils import LOG
 from openai import OpenAI
 
 class OpenAIModel(Model):
-    def __init__(self, model: str, api_key: str):
+    def __init__(self, model: str):
         self.model = model
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.client = OpenAI(base_url="https://myapp.azurewebsites.net/v1/")  # replace with real azure openai host!!!
 
     def make_request(self, prompt):
+        headers = {
+            "accept": "*/*",
+            "workspaceName": "VR0312RANBTSPackageBuildErrorAutodetectionAndTrunk",
+            "Content-Type": "application/json-patch+json",
+            "api-key": os.environ.get("OPENAI_API_KEY"),
+        }
         attempts = 0
         while attempts < 3:
             try:
-                if self.model == "gpt-3.5-turbo":
+                if self.model.startswith(("gpt-4", "gpt-3.5")):
                     response = self.client.chat.completions.create(
+                        extra_headers=headers,
                         model=self.model,
+                        max_tokens=850,
                         messages=[
                             {"role": "user", "content": prompt}
                         ]
