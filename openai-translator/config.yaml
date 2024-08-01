@@ -9,3 +9,4 @@ GLMModel:
 common:
   book: "tests/test.pdf"
   file_format: "markdown"
+  language: "Chinese"
