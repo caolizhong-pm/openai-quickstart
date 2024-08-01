@@ -11,6 +11,8 @@ class ArgumentParser:
         self.parser.add_argument('--openai_api_key', type=str, help='The API key for OpenAIModel. Required if model_type is "OpenAIModel".')
         self.parser.add_argument('--book', type=str, help='PDF file to translate.')
         self.parser.add_argument('--file_format', type=str, help='The file format of translated book. Now supporting PDF and Markdown')
+        self.parser.add_argument('--language', type=str, help='The target language to translate.')
+
 
     def parse_arguments(self):
         args = self.parser.parse_args()
