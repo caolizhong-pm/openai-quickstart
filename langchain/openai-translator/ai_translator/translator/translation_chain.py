@@ -1,8 +1,18 @@
+import os, openai
 from langchain_openai import ChatOpenAI
 from langchain.chains import LLMChain
 
 from utils import LOG
 from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate, SystemMessagePromptTemplate
+
+# adapt to custom API
+openai.api_base = "https://nvdc-prod-euw-llmapiorchestration-app.azurewebsites.net/v1/"
+headers = {
+    "accept": "*/*",
+    "workspaceName": "VR0312RANBTSPackageBuildErrorAutodetectionAndTrunk",#os.environ.get("LLM_GATEWAY_WORKSPACE"),
+    "Content-Type": "application/json-patch+json",
+    "api-key": os.environ.get("OPENAI_API_KEY"),
+}
 
 class TranslationChain:
     def __init__(self, model_name: str = "gpt-3.5-turbo", verbose: bool = True):
@@ -10,7 +20,7 @@ class TranslationChain:
         # 翻译任务指令始终由 System 角色承担
         template = (
             """You are a translation expert, proficient in various languages. \n
-            Translates {source_language} to {target_language}."""
+            Translates {source_language} to {target_language} with {style} style."""
         )
         system_message_prompt = SystemMessagePromptTemplate.from_template(template)
 
@@ -24,17 +34,19 @@ class TranslationChain:
         )
 
         # 为了翻译结果的稳定性，将 temperature 设置为 0
-        chat = ChatOpenAI(model_name=model_name, temperature=0, verbose=verbose)
-
+        chat = ChatOpenAI(
+                model_name=model_name, base_url=openai.api_base, temperature=0, max_tokens=2048, verbose=verbose, default_headers=headers) # clz adaption
+        #self.chain = chat_prompt_template | chat # clz
         self.chain = LLMChain(llm=chat, prompt=chat_prompt_template, verbose=verbose)
 
-    def run(self, text: str, source_language: str, target_language: str) -> (str, bool):
+    def run(self, text: str, source_language: str, target_language: str, style: str) -> (str, bool):
         result = ""
         try:
             result = self.chain.run({
                 "text": text,
                 "source_language": source_language,
                 "target_language": target_language,
+                "style": style,
             })
         except Exception as e:
             LOG.error(f"An error occurred during translation: {e}")
